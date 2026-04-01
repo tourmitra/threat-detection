@@ -44,14 +44,7 @@ export default async function LogsPage({ searchParams }: Params) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center mb-6 border-b dark:border-zinc-800 pb-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Security Logs</h2>
-          <p className="text-zinc-500 text-sm">Full history of security events evaluated for this account.</p>
-        </div>
-      </div>
-      
+    <div className="space-y-6 text-zinc-900 dark:text-zinc-100">
       <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm">
         <table className="w-full text-sm text-left">
           <thead className="bg-zinc-50 dark:bg-zinc-950/50 border-b dark:border-zinc-800 text-zinc-500 uppercase">

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { Prisma } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 
@@ -14,6 +15,14 @@ const registerSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const dbUrl = process.env.DATABASE_URL
+    if (!dbUrl || dbUrl.includes('postgresql://user:password@localhost:5432/dbname')) {
+      return NextResponse.json(
+        { message: 'Database is not configured. Set a real DATABASE_URL and run: npx prisma db push' },
+        { status: 503 }
+      )
+    }
+
     const body = await req.json()
     const { name, email, password, city, country, phone } = registerSchema.parse(body)
 
@@ -55,6 +64,23 @@ export async function POST(req: Request) {
     if (error?.name === "ZodError") {
       return NextResponse.json({ message: error.issues?.[0]?.message || "Invalid request" }, { status: 400 })
     }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2021') {
+        return NextResponse.json(
+          { message: 'Database tables not found. Run: npx prisma db push' },
+          { status: 500 }
+        )
+      }
+    }
+
+    if (error instanceof Prisma.PrismaClientInitializationError) {
+      return NextResponse.json(
+        { message: 'Cannot connect to database. Check DATABASE_URL and database availability.' },
+        { status: 500 }
+      )
+    }
+
     console.error(error)
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }

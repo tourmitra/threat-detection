@@ -36,14 +36,7 @@ export default async function AlertsPage({ searchParams }: Params) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center mb-6 border-b dark:border-zinc-800 pb-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-red-600">Active Threat Admin Console</h2>
-          <p className="text-zinc-500 text-sm">Review, triage, and resolve flagged critical events across all users.</p>
-        </div>
-      </div>
-      
+    <div className="space-y-6 text-zinc-900 dark:text-zinc-100">
       <div className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm">
         <table className="w-full text-sm text-left">
           <thead className="bg-zinc-50 dark:bg-zinc-950/50 border-b dark:border-zinc-800 text-zinc-500 uppercase">
@@ -83,8 +76,8 @@ export default async function AlertsPage({ searchParams }: Params) {
                   {ev.ipAddress} {ev.location ? `· ${ev.location}` : ""}
                 </td>
                 <td className="px-6 py-4 text-zinc-500">
-                  <button className="text-blue-600 hover:underline mr-3 font-medium">Investigate</button>
-                  <button className="text-zinc-600 hover:text-zinc-900 dark:hover:text-white font-medium">Resolve</button>
+                  <button className="text-blue-600 dark:text-blue-400 hover:underline mr-3 font-medium">Investigate</button>
+                  <button className="text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white font-medium">Resolve</button>
                 </td>
               </tr>
             ))}

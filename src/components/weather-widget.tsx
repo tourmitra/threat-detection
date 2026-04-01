@@ -22,9 +22,6 @@ export default function WeatherWidget({ userCity }: { userCity: string }) {
     getWeather()
   }, [userCity])
 
-  if (loading) return <div className="animate-pulse h-12 w-32 bg-zinc-200 dark:bg-zinc-800 rounded-md" />
-  if (!weather || !weather.main) return null
-
   // Dynamic icon
   const getIcon = (main: string) => {
     switch (main.toLowerCase()) {
@@ -53,6 +50,9 @@ export default function WeatherWidget({ userCity }: { userCity: string }) {
     else body.classList.add('theme-clouds')
 
   }, [weather])
+
+  if (loading) return <div className="animate-pulse h-12 w-32 bg-zinc-200 dark:bg-zinc-800 rounded-md" />
+  if (!weather || !weather.main) return null
 
   return (
     <div className="flex items-center space-x-3 bg-white dark:bg-zinc-900 border dark:border-zinc-800 px-4 py-2 rounded-lg shadow-sm">

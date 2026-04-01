@@ -12,10 +12,6 @@ export default auth((req) => {
   if (isProtectedRoute && !isLoggedIn) {
     return Response.redirect(new URL('/login', req.nextUrl))
   }
-
-  if (isLoggedIn && (req.nextUrl.pathname === '/login' || req.nextUrl.pathname === '/register')) {
-    return Response.redirect(new URL('/dashboard', req.nextUrl))
-  }
 })
 
 export const config = {

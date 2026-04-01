@@ -6,7 +6,7 @@ import { z } from "zod"
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(1),
 })
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -24,17 +24,58 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         try {
-          const { email, password } = loginSchema.parse(credentials)
+          const parsedCredentials = loginSchema.safeParse(credentials)
+
+          if (!parsedCredentials.success) {
+            await db.securityEvent.create({
+              data: {
+                eventType: 'LOGIN_FAILED',
+                severity: 'LOW',
+                ipAddress: '0.0.0.0',
+                metadata: {
+                  reason: 'INVALID_LOGIN_INPUT',
+                },
+              }
+            })
+            return null
+          }
+
+          const { email, password } = parsedCredentials.data
 
           const user = await db.user.findUnique({
             where: { email }
           })
 
-          if (!user) return null
+          if (!user) {
+            await db.securityEvent.create({
+              data: {
+                eventType: 'LOGIN_FAILED',
+                severity: 'LOW',
+                ipAddress: '0.0.0.0',
+                metadata: {
+                  email,
+                  reason: 'EMAIL_NOT_FOUND',
+                },
+              }
+            })
+            return null
+          }
 
           // Check if account is locked
           if (user.lockedUntil && user.lockedUntil > new Date()) {
-            throw new Error("Account is temporarily locked. Please try again later.")
+            await db.securityEvent.create({
+              data: {
+                userId: user.id,
+                eventType: 'ACCOUNT_LOCKED',
+                severity: 'MEDIUM',
+                ipAddress: '0.0.0.0',
+                metadata: {
+                  email,
+                  reason: 'LOCKED_ACCOUNT_LOGIN_ATTEMPT',
+                },
+              }
+            })
+            return null
           }
 
           const passwordsMatch = await bcrypt.compare(password, user.passwordHash)
@@ -59,6 +100,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 eventType: lockedUntil ? 'ACCOUNT_LOCKED' : 'LOGIN_FAILED',
                 severity: lockedUntil ? 'MEDIUM' : 'LOW',
                 ipAddress: '0.0.0.0', // Will be extracted from request in middleware later
+                metadata: {
+                  email,
+                  reason: 'WRONG_PASSWORD',
+                },
               }
             })
 
@@ -82,6 +127,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               eventType: 'LOGIN_SUCCESS',
               severity: 'INFO',
               ipAddress: '0.0.0.0', // Update later
+              metadata: {
+                email,
+              },
             }
           })
 
@@ -93,7 +141,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             city: user.city,
           }
         } catch (error) {
-          if (error instanceof z.ZodError) return null
           throw error
         }
       }

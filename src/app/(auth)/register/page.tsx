@@ -47,6 +47,8 @@ export default function RegisterPage() {
     } catch (err: any) {
       if (err?.name === "ZodError") {
         setError(err.issues?.[0]?.message || "Validation Error")
+      } else if (err instanceof TypeError) {
+        setError("Cannot reach server. Make sure `npm run dev` is running on http://localhost:3000.")
       } else {
         setError("An unexpected error occurred")
       }
@@ -56,7 +58,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="w-full max-w-md space-y-6 bg-white dark:bg-zinc-900 p-8 rounded-xl shadow-sm border dark:border-zinc-800">
+    <div className="w-full max-w-md space-y-6 bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100 p-8 rounded-xl shadow-sm border dark:border-zinc-800">
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-bold tracking-tight">Create an account</h1>
         <p className="text-sm text-zinc-500">Sign up to access the ASPIREX 2026 platform</p>
@@ -71,28 +73,28 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2 col-span-2">
-            <label className="text-sm font-medium" htmlFor="name">Full Name</label>
-            <input id="name" name="name" type="text" required className="flex h-10 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:focus:ring-zinc-500" />
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-200" htmlFor="name">Full Name</label>
+            <input id="name" name="name" type="text" required className="flex h-10 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-500" />
           </div>
           <div className="space-y-2 col-span-2">
-            <label className="text-sm font-medium" htmlFor="email">Email</label>
-            <input id="email" name="email" type="email" required className="flex h-10 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:focus:ring-zinc-500" />
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-200" htmlFor="email">Email</label>
+            <input id="email" name="email" type="email" required className="flex h-10 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-500" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="city">City</label>
-            <input id="city" name="city" type="text" required className="flex h-10 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:focus:ring-zinc-500" />
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-200" htmlFor="city">City</label>
+            <input id="city" name="city" type="text" required className="flex h-10 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-500" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="country">Country</label>
-            <input id="country" name="country" type="text" required className="flex h-10 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:focus:ring-zinc-500" />
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-200" htmlFor="country">Country</label>
+            <input id="country" name="country" type="text" required className="flex h-10 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-500" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="password">Password</label>
-            <input id="password" name="password" type="password" required className="flex h-10 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:focus:ring-zinc-500" />
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-200" htmlFor="password">Password</label>
+            <input id="password" name="password" type="password" required className="flex h-10 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-500" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="confirmPassword">Confirm Password</label>
-            <input id="confirmPassword" name="confirmPassword" type="password" required className="flex h-10 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:focus:ring-zinc-500" />
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-200" htmlFor="confirmPassword">Confirm Password</label>
+            <input id="confirmPassword" name="confirmPassword" type="password" required className="flex h-10 w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-500" />
           </div>
         </div>
         <button disabled={loading} type="submit" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 disabled:pointer-events-none disabled:opacity-50 bg-zinc-900 text-zinc-50 hover:bg-zinc-900/90 h-10 px-4 py-2 w-full dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/90">
