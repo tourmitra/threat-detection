@@ -18,7 +18,7 @@ export default async function AlertsPage({ searchParams }: Params) {
 
   const events = await db.securityEvent.findMany({
     where: { 
-      severity: { in: ['HIGH', 'CRITICAL'] },
+      severity: { in: ['MEDIUM', 'HIGH', 'CRITICAL'] },
       status: { in: ['OPEN', 'INVESTIGATING'] }
     },
     orderBy: { createdAt: 'desc' },
@@ -31,6 +31,7 @@ export default async function AlertsPage({ searchParams }: Params) {
 
   // Basic styling mapping
   const severityColors: any = {
+    MEDIUM: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700",
     HIGH: "bg-orange-50 text-orange-700 border-orange-200",
     CRITICAL: "bg-red-50 text-red-700 border-red-200",
   }
@@ -46,7 +47,7 @@ export default async function AlertsPage({ searchParams }: Params) {
               <th className="px-6 py-3">Event Type</th>
               <th className="px-6 py-3">Severity</th>
               <th className="px-6 py-3">Location</th>
-              <th className="px-6 py-3">Actions</th>
+              <th className="px-6 py-3">Reason</th>
             </tr>
           </thead>
           <tbody className="divide-y dark:divide-zinc-800">
@@ -76,8 +77,9 @@ export default async function AlertsPage({ searchParams }: Params) {
                   {ev.ipAddress} {ev.location ? `· ${ev.location}` : ""}
                 </td>
                 <td className="px-6 py-4 text-zinc-500">
-                  <button className="text-blue-600 dark:text-blue-400 hover:underline mr-3 font-medium">Investigate</button>
-                  <button className="text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white font-medium">Resolve</button>
+                  {typeof ev.metadata === "object" && ev.metadata && "reason" in ev.metadata
+                    ? String((ev.metadata as { reason?: string }).reason ?? "-")
+                    : "-"}
                 </td>
               </tr>
             ))}
