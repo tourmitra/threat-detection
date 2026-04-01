@@ -1,6 +1,6 @@
-# ASPIREX 2026 Cloud Security Platform
+# Cloud Security & Threat Detection System
 
-ASPIREX is a cloud security and threat detection web application that tracks authentication events, highlights suspicious behavior, and provides an admin workflow for alert review and user account control.
+It is a cloud security and threat detection web application that tracks authentication events, highlights suspicious behavior, and provides an admin workflow for alert review and user account control.
 
 It is built for serverless deployment on Vercel and combines real-time security visibility with role-based access for users and administrators.
 
