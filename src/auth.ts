@@ -1,6 +1,7 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { db } from "@/lib/db"
+import { Prisma } from "@prisma/client"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 
@@ -9,9 +10,33 @@ const loginSchema = z.object({
   password: z.string().min(1),
 })
 
+async function safeCreateSecurityEvent(data: {
+  userId?: string
+  eventType: string
+  severity: "INFO" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
+  ipAddress: string
+  metadata?: Record<string, unknown>
+}) {
+  try {
+    const payload: Prisma.SecurityEventUncheckedCreateInput = {
+      eventType: data.eventType,
+      severity: data.severity,
+      ipAddress: data.ipAddress,
+      metadata: data.metadata as Prisma.InputJsonValue | undefined,
+      ...(data.userId ? { userId: data.userId } : {}),
+    }
+
+    await db.securityEvent.create({
+      data: payload,
+    })
+  } catch {
+    // Logging must never break authentication flow.
+  }
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
-  secret: process.env.AUTH_SECRET,
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: '/login',
   },
@@ -27,15 +52,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const parsedCredentials = loginSchema.safeParse(credentials)
 
           if (!parsedCredentials.success) {
-            await db.securityEvent.create({
-              data: {
-                eventType: 'LOGIN_FAILED',
-                severity: 'LOW',
-                ipAddress: '0.0.0.0',
-                metadata: {
-                  reason: 'INVALID_LOGIN_INPUT',
-                },
-              }
+            await safeCreateSecurityEvent({
+              eventType: 'LOGIN_FAILED',
+              severity: 'LOW',
+              ipAddress: '0.0.0.0',
+              metadata: {
+                reason: 'INVALID_LOGIN_INPUT',
+              },
             })
             return null
           }
@@ -47,33 +70,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           })
 
           if (!user) {
-            await db.securityEvent.create({
-              data: {
-                eventType: 'LOGIN_FAILED',
-                severity: 'LOW',
-                ipAddress: '0.0.0.0',
-                metadata: {
-                  email,
-                  reason: 'EMAIL_NOT_FOUND',
-                },
-              }
+            await safeCreateSecurityEvent({
+              eventType: 'LOGIN_FAILED',
+              severity: 'LOW',
+              ipAddress: '0.0.0.0',
+              metadata: {
+                email,
+                reason: 'EMAIL_NOT_FOUND',
+              },
             })
             return null
           }
 
           // Check if account is locked
           if (user.lockedUntil && user.lockedUntil > new Date()) {
-            await db.securityEvent.create({
-              data: {
-                userId: user.id,
-                eventType: 'ACCOUNT_LOCKED',
-                severity: 'MEDIUM',
-                ipAddress: '0.0.0.0',
-                metadata: {
-                  email,
-                  reason: 'LOCKED_ACCOUNT_LOGIN_ATTEMPT',
-                },
-              }
+            await safeCreateSecurityEvent({
+              userId: user.id,
+              eventType: 'ACCOUNT_LOCKED',
+              severity: 'MEDIUM',
+              ipAddress: '0.0.0.0',
+              metadata: {
+                email,
+                reason: 'LOCKED_ACCOUNT_LOGIN_ATTEMPT',
+              },
             })
             return null
           }
@@ -94,17 +113,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             })
 
             // Log security event
-            await db.securityEvent.create({
-              data: {
-                userId: user.id,
-                eventType: lockedUntil ? 'ACCOUNT_LOCKED' : 'LOGIN_FAILED',
-                severity: lockedUntil ? 'MEDIUM' : 'LOW',
-                ipAddress: '0.0.0.0', // Will be extracted from request in middleware later
-                metadata: {
-                  email,
-                  reason: 'WRONG_PASSWORD',
-                },
-              }
+            await safeCreateSecurityEvent({
+              userId: user.id,
+              eventType: lockedUntil ? 'ACCOUNT_LOCKED' : 'LOGIN_FAILED',
+              severity: lockedUntil ? 'MEDIUM' : 'LOW',
+              ipAddress: '0.0.0.0',
+              metadata: {
+                email,
+                reason: 'WRONG_PASSWORD',
+              },
             })
 
             return null
@@ -121,16 +138,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           })
 
           // Log successful login
-          await db.securityEvent.create({
-            data: {
-              userId: user.id,
-              eventType: 'LOGIN_SUCCESS',
-              severity: 'INFO',
-              ipAddress: '0.0.0.0', // Update later
-              metadata: {
-                email,
-              },
-            }
+          await safeCreateSecurityEvent({
+            userId: user.id,
+            eventType: 'LOGIN_SUCCESS',
+            severity: 'INFO',
+            ipAddress: '0.0.0.0',
+            metadata: {
+              email,
+            },
           })
 
           return { 
@@ -141,7 +156,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             city: user.city,
           }
         } catch (error) {
-          throw error
+          console.error("Credentials authorize error", error)
+          return null
         }
       }
     })
