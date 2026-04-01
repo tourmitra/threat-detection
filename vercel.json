@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/anomaly",
+      "schedule": "0 */6 * * *"
+    }
+  ]
+}

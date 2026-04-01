@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String
+  passwordHash     String
+  city             String
+  country          String
+  phone            String?
+  avatarUrl        String?
+  role             Role      @default(USER)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  lastLoginAt      DateTime?
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime?
+
+  securityEvents SecurityEvent[]
+  sessions       Session[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model SecurityEvent {
+  id                String    @id @default(cuid())
+  userId            String?   @map("user_id")
+  eventType         String
+  severity          Severity
+  ipAddress         String
+  location          String?
+  deviceFingerprint String?
+  metadata          Json?
+  status            Status    @default(OPEN)
+  isAiAnomaly       Boolean   @default(false)
+  anomalyScore      Float?
+  resolvedBy        String?
+  resolvedAt        DateTime?
+  createdAt         DateTime  @default(now())
+
+  user   User?   @relation(fields: [userId], references: [id])
+  alerts Alert[]
+}
+
+enum Severity {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum Status {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+}
+
+model Alert {
+  id             String      @id @default(cuid())
+  eventId        String
+  channel        Channel
+  sentAt         DateTime    @default(now())
+  acknowledgedAt DateTime?
+  acknowledgedBy String?
+  status         AlertStatus @default(PENDING)
+
+  event SecurityEvent @relation(fields: [eventId], references: [id])
+}
+
+enum Channel {
+  EMAIL
+  IN_APP
+  WEBHOOK
+}
+
+enum AlertStatus {
+  PENDING
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  userId     String
+  token      String   @unique
+  deviceInfo String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  user User @relation(fields: [userId], references: [id])
+}
