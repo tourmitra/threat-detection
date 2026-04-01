@@ -62,7 +62,7 @@ npm run vercel-build
 
 ## Cron Job
 
-`vercel.json` includes a cron schedule that hits `/api/anomaly` every 6 hours.
+`vercel.json` includes a cron schedule that hits `/api/anomaly` once daily (Hobby-compatible).
 
 - If `CRON_SECRET` is set, send `Authorization: Bearer <CRON_SECRET>` to `/api/anomaly`.
 - If `CRON_SECRET` is not set, the route still runs for easier hackathon demos.
