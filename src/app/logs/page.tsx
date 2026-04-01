@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
 import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 
 type Params = {
   searchParams: { page?: string, severity?: string, status?: string }
@@ -7,21 +8,31 @@ type Params = {
 
 export default async function LogsPage({ searchParams }: Params) {
   const session = await auth()
+
+  if (!session?.user?.id) {
+    redirect("/login")
+  }
   
   const page = parseInt(searchParams.page || "1")
   const limit = 20
   const skip = (page - 1) * limit
 
-  const where: any = { userId: session!.user!.id }
+  const where: any = { userId: session.user.id }
   if (searchParams.severity) where.severity = searchParams.severity
   if (searchParams.status) where.status = searchParams.status
 
-  const logs = await db.securityEvent.findMany({
-    where,
-    orderBy: { createdAt: 'desc' },
-    skip,
-    take: limit,
-  })
+  let logs: Awaited<ReturnType<typeof db.securityEvent.findMany>> = []
+
+  try {
+    logs = await db.securityEvent.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    })
+  } catch {
+    // Keep logs empty instead of crashing production render.
+  }
 
   // Basic styling mapping
   const severityColors: any = {

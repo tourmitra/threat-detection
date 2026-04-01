@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { AlertCircle, AlertTriangle, ShieldCheck, Activity } from "lucide-react"
 import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 
 type DashboardStats = {
   total: number
@@ -26,7 +27,23 @@ async function getStats(userId: string): Promise<DashboardStats> {
 
 export default async function DashboardPage() {
   const session = await auth()
-  const stats = await getStats(session!.user!.id!)
+
+  if (!session?.user?.id) {
+    redirect("/login")
+  }
+
+  let stats: DashboardStats = {
+    total: 0,
+    activeThreats: 0,
+    anomalies: 0,
+    alertsSent: 0,
+  }
+
+  try {
+    stats = await getStats(session.user.id)
+  } catch {
+    // Fail open on dashboard stats to avoid hard-crashing Server Components in production.
+  }
 
   return (
     <div className="space-y-8">

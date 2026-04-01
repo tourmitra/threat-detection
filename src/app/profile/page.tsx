@@ -1,12 +1,20 @@
 import { db } from "@/lib/db"
 import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 
 export default async function ProfilePage() {
   const session = await auth()
   
-  if (!session?.user) return null
+  if (!session?.user?.id) {
+    redirect("/login")
+  }
 
-  const user = await db.user.findUnique({ where: { id: session.user.id } })
+  let user: Awaited<ReturnType<typeof db.user.findUnique>> = null
+  try {
+    user = await db.user.findUnique({ where: { id: session.user.id } })
+  } catch {
+    // Render with empty/fallback values if DB fails.
+  }
 
   return (
     <div className="max-w-2xl space-y-6">
