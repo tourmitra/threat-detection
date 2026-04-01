@@ -1,6 +1,5 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { db } from "@/lib/db"
 import { Prisma } from "@prisma/client"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
@@ -11,6 +10,7 @@ const loginSchema = z.object({
 })
 
 async function safeCreateSecurityEvent(data: {
+  db: any
   userId?: string
   eventType: string
   severity: "INFO" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
@@ -26,7 +26,7 @@ async function safeCreateSecurityEvent(data: {
       ...(data.userId ? { userId: data.userId } : {}),
     }
 
-    await db.securityEvent.create({
+    await data.db.securityEvent.create({
       data: payload,
     })
   } catch {
@@ -36,9 +36,10 @@ async function safeCreateSecurityEvent(data: {
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
-  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "insecure-dev-only-secret-change-me",
   pages: {
     signIn: '/login',
+    error: '/login',
   },
   session: { strategy: 'jwt' },
   providers: [
@@ -49,10 +50,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         try {
+          const { db } = await import("@/lib/db")
+
           const parsedCredentials = loginSchema.safeParse(credentials)
 
           if (!parsedCredentials.success) {
             await safeCreateSecurityEvent({
+              db,
               eventType: 'LOGIN_FAILED',
               severity: 'LOW',
               ipAddress: '0.0.0.0',
@@ -71,6 +75,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           if (!user) {
             await safeCreateSecurityEvent({
+              db,
               eventType: 'LOGIN_FAILED',
               severity: 'LOW',
               ipAddress: '0.0.0.0',
@@ -85,6 +90,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // Check if account is locked
           if (user.lockedUntil && user.lockedUntil > new Date()) {
             await safeCreateSecurityEvent({
+              db,
               userId: user.id,
               eventType: 'ACCOUNT_LOCKED',
               severity: 'MEDIUM',
@@ -114,6 +120,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
             // Log security event
             await safeCreateSecurityEvent({
+              db,
               userId: user.id,
               eventType: lockedUntil ? 'ACCOUNT_LOCKED' : 'LOGIN_FAILED',
               severity: lockedUntil ? 'MEDIUM' : 'LOW',
@@ -139,6 +146,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           // Log successful login
           await safeCreateSecurityEvent({
+            db,
             userId: user.id,
             eventType: 'LOGIN_SUCCESS',
             severity: 'INFO',
